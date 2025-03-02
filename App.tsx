@@ -5,94 +5,55 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import React, {useCallback, useEffect, useState} from 'react';
+import {NativeModules, StyleSheet, Text, TextInput} from 'react-native';
+import {clearData, clearKey, getData, json1, json2, json3, json4, setData} from './common/state';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [state, setState] = useState<any>();
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  useEffect(() => {
+    const obj1 = JSON.parse(json1);
+    setData('user1', obj1.name);
+    setData('age1', obj1.age);
+    console.debug(getData('user1')); // Output: John
+    console.debug(getData('age1')); // Output: 30
+
+    // Test clearKey
+    clearKey('user1000'); // Output: Key: user1 has been cleared
+    getData('user1000'); // Output: Key: user1 has been cleared
+    console.debug(getData('user1')); // Output: Key: user1 not found
+
+    // Test clearData
+    const obj2 = JSON.parse(json2);
+    setData('city1', obj2.city);
+    setData('country1', obj2.country);
+    clearData(); // Output: All data has been cleared
+    console.debug(getData('city1')); // Output: Key: city1 not found
+    console.debug(getData('country1')); // Output: Key: country1 not found
+
+    // Test with different JSON
+    const obj3 = JSON.parse(json3);
+    setData('product1', obj3.product);
+    setData('price1', obj3.price);
+    console.debug(getData('product1')); // Output: Laptop
+    console.debug(getData('price1')); // Output: 1000
+
+    const obj4 = JSON.parse(json4);
+    setData('user2', obj4.user);
+    setData('email2', obj4.email);
+    console.debug(getData('user2')); // Output: Jane
+    console.debug(getData('email2')); // Output: jane@example.com
+  }, []);
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    // <TextInput
+    //   value={state}
+    //   onChangeText={text => setState(text)}
+    //   onSubmitEditing={setNativeData}
+    // />
+    // <Text>{state.company}</Text>
+    <></>
   );
 }
 
@@ -116,3 +77,5 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+
