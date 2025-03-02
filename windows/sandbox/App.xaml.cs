@@ -59,5 +59,6 @@ namespace sandbox
                 frame.Navigate(typeof(MainPage), null);
             }
         }
+
     }
 }

@@ -30,5 +30,44 @@ namespace sandbox
             var app = Application.Current as App;
             reactRootView.ReactNativeHost = app.Host;
         }
+
+        public void FindTextBoxByTag()
+        {
+            // Traverse all children in the visual tree of the MainPage.
+            var allChildren = FindAllControlsByTag(this, "MyTextBoxTag");
+
+            foreach (var control in allChildren)
+            {
+                if (control is TextBox)
+                {
+                    //TextBox textBox = (TextBox)control;
+                    //// You now have your TextBox and can access its properties
+                    //textBox.Text = "Found and updated via Tag!";
+                }
+            }
+        }
+
+        private static IEnumerable<UIElement> FindAllControlsByTag(DependencyObject parent, string tag)
+        {
+            List<UIElement> result = new List<UIElement>();
+
+            // Traverse the visual tree
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                // Check if the child has the desired tag
+                if (child is FrameworkElement element && element.Tag != null && element.Tag.ToString() == tag)
+                {
+                    //result.Add(child);
+                }
+
+                // Recursively check in the child controls
+                result.AddRange(FindAllControlsByTag(child, tag));
+            }
+
+            return result;
+        }
+
     }
 }
