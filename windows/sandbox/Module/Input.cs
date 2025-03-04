@@ -57,15 +57,18 @@ namespace sandbox.Module
             {
                 textbox.Focus(FocusState.Programmatic);
                 var end = textbox.SelectionStart;
+                // submit text and 
                 var text = textbox.Text.ToString().Remove(end - 1,1);
-                Submit(textbox.Tag.ToString());
+                var textSubmmit = new TextSubmitEvent();
+                //textSubmit.Tag
+                Submit(new TextSubmitEvent { tag = textbox.Tag.ToString(), text = text  });
                 Console.WriteLine("here");
                 Console.WriteLine(text);
             }
         }
 
         [ReactEvent]
-        public Action<string> Submit { get; set; }
+        public Action<TextSubmitEvent> Submit { get; set; }
 
         private static IEnumerable<UIElement> FindAllControlsByTag(DependencyObject parent, string tagId)
         {
@@ -88,4 +91,10 @@ namespace sandbox.Module
             return result;
         }
     }
+     class TextSubmitEvent
+    {
+        public string tag { get; set; }
+        public string text { get; set; }
+    }
+
 }

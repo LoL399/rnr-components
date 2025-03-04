@@ -5,8 +5,16 @@
  * @format
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
-import {NativeModules, StyleSheet, Text, TextInput} from 'react-native';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  Button,
+  NativeModules,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   clearData,
   clearKey,
@@ -18,11 +26,13 @@ import {
   setData,
 } from './common/state';
 import {CustomTextInput} from './common/text-input';
+import {CustomView} from './common/custom-view';
 
 function App(): React.JSX.Element {
   const [state, setState] = useState<any>();
-
+  const contextRef = useRef(null);
   useEffect(() => {
+    // setState(2000);
     // const obj1 = JSON.parse(json1);
     // setData('user1', obj1.name);
     // setData('age1', obj1.age);
@@ -52,6 +62,34 @@ function App(): React.JSX.Element {
     // console.debug(getData('email2')); // Output: jane@example.com
   }, []);
 
+  useEffect(() => {
+    NativeModules.Custom.SetUpCommon((contextRef.current as any)._nativeTag);
+  }, [contextRef]);
+
+  const changeState = useCallback(() => {
+    setState(100);
+  }, [state, setState]);
+
+  const menu = useMemo(() => {
+    return (
+      <View ref={contextRef} style={{display: 'none'}}>
+        <Text>Check 1</Text>
+        <Text>Check 2</Text>
+        <Text>Check 3</Text>
+      </View>
+    );
+  }, []);
+
+  useEffect(() => {
+    console.log('useEffect');
+    console.log({state});
+  }, [state]);
+
+  const test = () => {
+    console.log('test fn');
+    console.log({state});
+  };
+
   return (
     // <TextInput
     //   value={state}
@@ -60,7 +98,14 @@ function App(): React.JSX.Element {
     // />
     // <Text>{state.company}</Text>
     <>
-      <CustomTextInput />
+      {/* <TouchableOpacity onPress={changeState}>
+        <Text>click</Text>
+      </TouchableOpacity>
+
+      <CustomTextInput onSubmit={()=>test()} /> */}
+      <CustomView style={styles.container}>
+        {menu}
+      </CustomView>
     </>
   );
 }
@@ -81,6 +126,12 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  container: {
+    backgroundColor: 'white',
+    width: 200,
+    height: 200,
+    borderRadius: 30,
   },
 });
 
