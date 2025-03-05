@@ -8,6 +8,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Button,
+  Linking,
   NativeModules,
   StyleSheet,
   Text,
@@ -30,8 +31,19 @@ import {CustomView} from './common/custom-view';
 
 function App(): React.JSX.Element {
   const [state, setState] = useState<any>();
+  const [parts, setParts] = useState<{content: string; isLink: boolean}[]>();
   const contextRef = useRef(null);
   useEffect(() => {
+    const splitValues = value.split(expression);
+    const parts: {content: string; isLink: boolean}[] = [];
+    splitValues.forEach(part => {
+      parts.push({
+        content: part,
+        isLink: expression.test(part),
+      });
+    });
+    setParts(parts);
+
     // setState(2000);
     // const obj1 = JSON.parse(json1);
     // setData('user1', obj1.name);
@@ -63,7 +75,7 @@ function App(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    NativeModules.Custom.SetUpCommon((contextRef.current as any)._nativeTag);
+    // NativeModules.Custom.SetUpCommon((contextRef.current as any)._nativeTag);
   }, [contextRef]);
 
   const changeState = useCallback(() => {
@@ -89,7 +101,10 @@ function App(): React.JSX.Element {
     console.log('test fn');
     console.log({state});
   };
-
+  const expression =
+    /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/i;
+  const value =
+    'abhttps://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url cbasd https://stackoverflow.com/questions/34624100/simulate-display-inline-in-react-nativeasdasdweweqwqewqe';
   return (
     // <TextInput
     //   value={state}
@@ -103,14 +118,34 @@ function App(): React.JSX.Element {
       </TouchableOpacity>
 
       <CustomTextInput onSubmit={()=>test()} /> */}
-      <CustomView style={styles.container}>
-        {menu}
-      </CustomView>
+
+      <View>
+        <Text>
+          {parts?.map((x, index) => {
+            const style = x.isLink && styles.link;
+            return x.isLink ? (
+              <Text
+                key={index}
+                style={style}
+                onPress={() => Linking.openURL(x.content)}>
+                {x.content}
+              </Text>
+            ) : (
+              <Text key={index}>{x.content}</Text>
+            );
+          })}
+        </Text>
+      </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  link: {
+    color: 'blue',
+    // fontSize: 16,
+    textDecorationLine: 'underline',
+  },
   sectionContainer: {
     marginTop: 32,
     paddingHorizontal: 24,
