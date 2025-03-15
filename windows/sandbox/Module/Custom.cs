@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.ReactNative.Managed;
 using Windows.ApplicationModel.Core;
+using Windows.Devices.Enumeration;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -67,9 +68,14 @@ namespace sandbox.Module
             {
                 var currentContent = Window.Current.Content;
                 var allChildren = FindAllControlsByTag(currentContent, tagId);
-                context = allChildren.First();
-                UIElement element = context; // Reference to your UIElement
 
+                if (allChildren.Count() > 0)
+                {
+                    context = allChildren.First() as ScrollViewer;
+                    context.PointerWheelChanged += ViewChange;
+                }
+                //UIElement element = context; // Reference to your UIElement
+                //context.PointerPressed += PointerRightClick;
                 // Create the Flyout
                 //flyout = new Flyout();
 
@@ -82,7 +88,27 @@ namespace sandbox.Module
             });
         }
 
+        private void ViewChange(object sender, PointerRoutedEventArgs e)
+        {
+            var scrollViewer = sender as ScrollViewer;
 
+            // Check the direction of the scroll wheel
+            var delta = e.GetCurrentPoint(scrollViewer).Properties.MouseWheelDelta;
+
+            if (delta > 0)
+            {
+                // Scroll Up (reverse to scroll down)
+                scrollViewer.ChangeView(scrollViewer.HorizontalOffset, scrollViewer.VerticalOffset + 200, null);
+            }
+            else
+            {
+                // Scroll Down (reverse to scroll up)
+                scrollViewer.ChangeView(scrollViewer.HorizontalOffset, scrollViewer.VerticalOffset - 200, null);
+            }
+        }
+
+        private Microsoft.ReactNative.ViewPanel container;
+        
         [ReactMethod]
         public async void Init(string tagId)
         {
@@ -97,13 +123,14 @@ namespace sandbox.Module
         {
             var currentContent = Window.Current.Content;
             var allChildren = FindAllControlsByTag(currentContent, tagId);
-
-            foreach (var control in allChildren)
-            {
-                control.PointerEntered += PointerIn;
-                control.PointerExited += PointerOut;
-                control.PointerPressed += PointerRightClick;
-            }
+            container = allChildren.First() as Microsoft.ReactNative.ViewPanel;
+            
+            //foreach (var control in allChildren)
+            //{
+            //    control.PointerEntered += PointerIn;
+            //    control.PointerExited += PointerOut;
+            //    control.PointerPressed += PointerRightClick;
+            //}
         }
 
         private void PointerIn(object sender, PointerRoutedEventArgs e)
@@ -126,23 +153,29 @@ namespace sandbox.Module
                 Console.WriteLine("right click");
                 var data = e.GetCurrentPoint(sender as UIElement).Position;
                 Point pointerPosition = new Point((int)data.X, (int)data.Y);
+                // Cast sender to Panel and access the panel's Children collection
+                var panel = (Windows.UI.Xaml.Controls.Panel)sender;
 
+                // Get the pointer position relative to the panel
+                var pointerPositionPanel = e.GetCurrentPoint (panel);
                 // Show the flyout at the pointer position
-                flyout.ShowAt(sender as FrameworkElement);
-                //(context as Viewbox).Set
-                //context.
-                //var flyout = createFlyout();
-                //var pointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
-                //var flyoutTarget = new Viewbox()
-                //{
-                //    HorizontalAlignment = HorizontalAlignment.Left,
-                //    VerticalAlignment = VerticalAlignment.Top,
+                var children = ((Windows.UI.Xaml.Controls.Panel)sender).Children;
+                var containerPointer = e.GetCurrentPoint(container);
+                var x = containerPointer.RawPosition.X;
+                var y = containerPointer.RawPosition.Y;
+                Button newButton = new Button
+                {
+                    Content = "Right Clicked",
+                    Width = 100,
+                    Background = new Windows.UI.Xaml.Media.SolidColorBrush(Windows.UI.Colors.Red),
+                    Height = 50,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Windows.UI.Xaml.Thickness((int)x, (int)y, 0, 0) // Positioning the button
+                };
 
-                //};
-                //flyoutTarget.Margin = new Windows.UI.Xaml.Thickness(pointerPosition.X, pointerPosition.Y, 0, 0);
-
-                // Show the Flyout
-                //flyout.ShowAt(sender as FrameworkElement);
+                // Add the new button to the Panel's Children collection
+                container.Children.Add(newButton);
 
             }
         }
