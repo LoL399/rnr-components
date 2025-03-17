@@ -10,6 +10,7 @@ using Windows.ApplicationModel.Core;
 using Windows.Devices.Enumeration;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
@@ -28,6 +29,7 @@ namespace sandbox.Module
         public Color backgroundClr = Color.White;
         public Color hoverClr = Color.Green;
         public UIElement context;
+        public ScrollViewer _context;
         private Color HexToColor(string hex)
         {
             // Remove any leading '#' symbol if present
@@ -71,8 +73,14 @@ namespace sandbox.Module
 
                 if (allChildren.Count() > 0)
                 {
-                    context = allChildren.First() as ScrollViewer;
-                    context.PointerWheelChanged += ViewChange;
+                    _context = allChildren.First() as ScrollViewer;
+                    Windows.UI.Xaml.Controls.Primitives.ScrollBar verticalScrollBar = FindChild<Windows.UI.Xaml.Controls.Primitives.ScrollBar>(_context, "PART_VerticalScrollBar");
+
+                    _context.PointerWheelChanged += ViewChange;
+                    verticalScrollBar.PointerEntered += ActiveScroll;
+                    verticalScrollBar.PointerEntered += DeactivateScroll;
+                    //verticalScrollBar.PointerPressed += ScrollPress;
+                    //verticalScrollBar.ValueChanged += VerticalScrollbar_ValueChanged;
                 }
                 //UIElement element = context; // Reference to your UIElement
                 //context.PointerPressed += PointerRightClick;
@@ -86,6 +94,61 @@ namespace sandbox.Module
                 // Set the ContentControl as the Flyout content
                 //flyout.Content = contentControl;
             });
+        }
+
+        private void ScrollPress(object sender, PointerRoutedEventArgs e)
+        {
+            ScrollBar scrollBar = sender as ScrollBar;
+            if (scrollBar != null)
+            {
+                if (scrollBar.Orientation == Orientation.Vertical)
+                {
+                    // Enable vertical scrolling
+                    _context.ChangeView(_context.HorizontalOffset, scrollBar.Value, null);
+                }
+                else if (scrollBar.Orientation == Orientation.Horizontal)
+                {
+                    // Enable horizontal scrolling
+                    _context.ChangeView(scrollBar.Value, _context.VerticalOffset, null);
+                }
+            }
+        }
+
+        private void DeactivateScroll(object sender, PointerRoutedEventArgs e)
+        {
+            //_context.IsEnabled = false;
+            _context.VerticalScrollMode = ScrollMode.Disabled;
+        }
+
+        private void ActiveScroll(object sender, PointerRoutedEventArgs e)
+        {
+            _context.VerticalScrollMode = ScrollMode.Auto;
+            ScrollBar scrollBar = sender as ScrollBar;
+            //scrollBar.en
+            //throw new NotImplementedException();
+        }
+
+
+        public T FindChild<T>(DependencyObject parent, string childName) where T : DependencyObject
+        {
+            // First we check if the parent itself is the type we're looking for
+            T foundChild = parent as T;
+
+            // If the parent is not of the requested type, look in the visual tree for a match
+            if (foundChild == null)
+            {
+                int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+                for (int i = 0; i < numVisuals; i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                    foundChild = FindChild<T>(child, childName);
+
+                    if (foundChild != null)
+                        break;
+                }
+            }
+
+            return foundChild;
         }
 
         private void ViewChange(object sender, PointerRoutedEventArgs e)

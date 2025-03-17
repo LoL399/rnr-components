@@ -67,9 +67,8 @@ const data = [
   {id: '56', title: 'Item 56'},
   {id: '57', title: 'Item 57'},
   {id: '58', title: 'Item 58'},
-  {id: '59', title: 'Item 59'}
-]
-
+  {id: '59', title: 'Item 59'},
+];
 
 const Flatlist = () => {
   const renderItem = ({item}: any) => (
@@ -79,15 +78,41 @@ const Flatlist = () => {
   );
   const ref = useRef(null);
   const [contentOffset, setContentOffset] = useState({x: 0, y: 0});
+  const [listHeight, setListHeight] = useState(0);
+  const [scrollOffsetPercent, setScrollOffsetPercent] = useState(0);
+  // const [contentHeight, setContentHeight] = useState(0);
+  const [thumbHeight, setThumbHeight] = useState(0);
+  const [location, setLocation] = useState(0);
+
   const handleScroll = (event: any) => {
     event.persist();
     event.preventDefault(); // Prevent scrolling action
+    //
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const location = event.nativeEvent.contentOffset.y;
+    const thumbHeight = event.nativeEvent.layoutMeasurement.height;
+    //
+    const thumbPercent = (thumbHeight / contentHeight) * 100;
+    const locationPercent =
+      100 - (location / contentHeight) * 100 - thumbPercent;
+    //
+    setThumbHeight(thumbPercent);
+    setLocation(locationPercent);
+    console.log(100 - (location / contentHeight) * 100);
+  };
+
+  const onLayout = (event: any) => {
+    const {height} = event.nativeEvent.layout;
+    console.log(height);
+    setListHeight(height);
   };
 
   useEffect(() => {
     const scroller = (ref.current as any)._listRef._scrollRef;
 
     if (scroller) {
+      NativeModules.Custom.SetUpCommon(scroller._nativeTag);
+      console.log((ref.current as any)._listRef._scrollRef._children[0]._children)
       NativeModules.Custom.SetUpCommon(scroller._nativeTag);
     }
   }, [ref]);
@@ -103,22 +128,55 @@ const Flatlist = () => {
           padding: 16,
         }}>
         <FlatList
+          initialScrollIndex={0}
           contentOffset={contentOffset}
+          onLayout={onLayout}
           onScroll={handleScroll}
           scrollEnabled={false}
+          // showsVerticalScrollIndicator={false}
           ref={ref}
           data={data}
-          inverted  
+          inverted
           renderItem={renderItem}
-          onEndReached={()=>{console.log('load')}}
+          onEndReached={() => {
+            console.log('load');
+          }}
           keyExtractor={item => item.id}
         />
+        {/* <View style={styles.scrollbarContainer}>
+          <View
+            style={[
+              styles.scrollbar,
+              {
+                height: `${thumbHeight}%`,
+                top: `${location}%`,
+              },
+            ]}
+          />
+        </View> */}
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollbarContainer: {
+    width: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  scrollbar: {
+    width: '100%',
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    position: 'absolute',
+    top: 0,
+  },
+
   container: {
     flex: 1,
     paddingTop: 20,
