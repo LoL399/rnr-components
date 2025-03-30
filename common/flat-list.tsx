@@ -6,14 +6,16 @@ import {
   StyleSheet,
   SafeAreaView,
   NativeModules,
+  NativeEventEmitter,
 } from 'react-native';
+import {CustomView} from './view';
 
 const data = [
-  {id: '1', title: 'Item 1'},
+  {id: '1', title: 'Item 1', item: [1, 2, 3]},
   {id: '2', title: 'Item 2'},
-  {id: '3', title: 'Item 3'},
+  {id: '3', title: 'Item 3', item: [1, 3]},
   {id: '4', title: 'Item 4'},
-  {id: '5', title: 'Item 5'},
+  {id: '5', title: 'Item 5', item: [2]},
   {id: '6', title: 'Item 6'},
   {id: '7', title: 'Item 7'},
   {id: '8', title: 'Item 8'},
@@ -72,10 +74,11 @@ const data = [
 
 const Flatlist = () => {
   const renderItem = ({item}: any) => (
-    <View style={styles.item}>
+    <CustomView style={styles.item} item={item.item} id={item.id}>
       <Text style={styles.title}>{item.title}</Text>
-    </View>
+    </CustomView>
   );
+
   const ref = useRef(null);
   const [contentOffset, setContentOffset] = useState({x: 0, y: 0});
   const [listHeight, setListHeight] = useState(0);
@@ -106,15 +109,23 @@ const Flatlist = () => {
     console.log(height);
     setListHeight(height);
   };
-
+  const emitter = new NativeEventEmitter();
   useEffect(() => {
     const scroller = (ref.current as any)._listRef._scrollRef;
 
     if (scroller) {
       NativeModules.Custom.SetUpCommon(scroller._nativeTag);
-      console.log((ref.current as any)._listRef._scrollRef._children[0]._children)
-      NativeModules.Custom.SetUpCommon(scroller._nativeTag);
+      console.log(
+        (ref.current as any)._listRef._scrollRef._children[0]._children,
+      );
+      // NativeModules.Custom.Init(0);
     }
+    let event = emitter.addListener('Submit', data => {
+      console.log({data});
+    });
+    return () => {
+      event.remove();
+    };
   }, [ref]);
 
   return (
