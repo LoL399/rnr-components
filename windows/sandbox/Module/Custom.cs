@@ -5,9 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.ReactNative;
 using Microsoft.ReactNative.Managed;
 using Windows.ApplicationModel.Core;
 using Windows.Devices.Enumeration;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -70,30 +72,40 @@ namespace sandbox.Module
             {
                 var currentContent = Window.Current.Content;
                 var allChildren = FindAllControlsByTag(currentContent, tagId);
-
-                if (allChildren.Count() > 0)
+                var item = allChildren.FirstOrDefault() as ViewPanel;
+                if (item == null) return;
+                bool state = false;
+                item.PointerEntered += (s, v) =>
                 {
-                    _context = allChildren.First() as ScrollViewer;
-                    Windows.UI.Xaml.Controls.Primitives.ScrollBar verticalScrollBar = FindChild<Windows.UI.Xaml.Controls.Primitives.ScrollBar>(_context, "PART_VerticalScrollBar");
+                };
+                item.PointerMoved += MyBorder_PointerMoved;
 
-                    _context.PointerWheelChanged += ViewChange;
-                    verticalScrollBar.PointerEntered += ActiveScroll;
-                    verticalScrollBar.PointerEntered += DeactivateScroll;
-                    //verticalScrollBar.PointerPressed += ScrollPress;
-                    //verticalScrollBar.ValueChanged += VerticalScrollbar_ValueChanged;
-                }
-                //UIElement element = context; // Reference to your UIElement
-                //context.PointerPressed += PointerRightClick;
-                // Create the Flyout
-                //flyout = new Flyout();
-
-                // Create a ContentControl to hold the UIElement
-                //ContentControl contentControl = new ContentControl();
-                //contentControl.Content = element;
-
-                // Set the ContentControl as the Flyout content
-                //flyout.Content = contentControl;
+                item.PointerExited += (s, v) =>
+                {
+                    Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
+                };
             });
+        }
+
+        private void MyBorder_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            var myGrid = (ViewPanel)sender;
+            var data = e.GetCurrentPoint(sender as UIElement).Position;
+            Point pointerPosition = new Point((int)data.X, (int)data.Y);
+
+            double gridWidth = myGrid.ActualWidth;
+            double gridHeight = myGrid.ActualHeight;
+
+            double cornerMargin = 50;
+
+            if ( pointerPosition.Y >= gridHeight - cornerMargin)
+            {
+                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.UpArrow, 0);
+            }
+            else
+            {
+                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
+            }
         }
 
         private void ScrollPress(object sender, PointerRoutedEventArgs e)
@@ -151,26 +163,6 @@ namespace sandbox.Module
             return foundChild;
         }
 
-        private void ViewChange(object sender, PointerRoutedEventArgs e)
-        {
-            var scrollViewer = sender as ScrollViewer;
-
-            // Check the direction of the scroll wheel
-            var delta = e.GetCurrentPoint(scrollViewer).Properties.MouseWheelDelta;
-
-            if (delta > 0)
-            {
-                // Scroll Up (reverse to scroll down)
-                scrollViewer.ChangeView(scrollViewer.HorizontalOffset, scrollViewer.VerticalOffset + 200, null);
-            }
-            else
-            {
-                // Scroll Down (reverse to scroll up)
-                scrollViewer.ChangeView(scrollViewer.HorizontalOffset, scrollViewer.VerticalOffset - 200, null);
-            }
-        }
-
-        private Microsoft.ReactNative.ViewPanel container;
         
         [ReactMethod]
         public async void Init(string tagId)
@@ -178,6 +170,8 @@ namespace sandbox.Module
             // Ensure code runs on the UI thread
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
+                //int x = 0;
+                //int result = 5 / x;  // This will throw a DivideByZeroException
                 FindComponent(tagId);
             });
         }
@@ -186,7 +180,7 @@ namespace sandbox.Module
         {
             var currentContent = Window.Current.Content;
             var allChildren = FindAllControlsByTag(currentContent, tagId);
-            container = allChildren.First() as Microsoft.ReactNative.ViewPanel;
+            var container = allChildren.First() as Microsoft.ReactNative.ViewPanel;
             
             //foreach (var control in allChildren)
             //{
@@ -222,23 +216,23 @@ namespace sandbox.Module
                 // Get the pointer position relative to the panel
                 var pointerPositionPanel = e.GetCurrentPoint (panel);
                 // Show the flyout at the pointer position
-                var children = ((Windows.UI.Xaml.Controls.Panel)sender).Children;
-                var containerPointer = e.GetCurrentPoint(container);
-                var x = containerPointer.RawPosition.X;
-                var y = containerPointer.RawPosition.Y;
-                Button newButton = new Button
-                {
-                    Content = "Right Clicked",
-                    Width = 100,
-                    Background = new Windows.UI.Xaml.Media.SolidColorBrush(Windows.UI.Colors.Red),
-                    Height = 50,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Windows.UI.Xaml.Thickness((int)x, (int)y, 0, 0) // Positioning the button
-                };
+                //var children = ((Windows.UI.Xaml.Controls.Panel)sender).Children;
+                //var containerPointer = e.GetCurrentPoint(container);
+                //var x = containerPointer.RawPosition.X;
+                //var y = containerPointer.RawPosition.Y;
+                //Button newButton = new Button
+                //{
+                //    Content = "Right Clicked",
+                //    Width = 100,
+                //    Background = new Windows.UI.Xaml.Media.SolidColorBrush(Windows.UI.Colors.Red),
+                //    Height = 50,
+                //    HorizontalAlignment = HorizontalAlignment.Left,
+                //    VerticalAlignment = VerticalAlignment.Top,
+                //    Margin = new Windows.UI.Xaml.Thickness((int)x, (int)y, 0, 0) // Positioning the button
+                //};
 
-                // Add the new button to the Panel's Children collection
-                container.Children.Add(newButton);
+                //// Add the new button to the Panel's Children collection
+                //container.Children.Add(newButton);
 
             }
         }
